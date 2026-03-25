@@ -134,9 +134,10 @@ final class CalculateStreakUseCase {
       checkWeek = checkWeek.subtract(const Duration(days: 7));
     }
 
-    // Longest weekly streak
+    // Longest weekly streak — computed independently so that a broken current
+    // streak does not hide a larger historical run.
     final sorted = completedWeeks.toList()..sort();
-    var longest = currentStreak > 0 ? currentStreak : 0;
+    var longest = sorted.isEmpty ? 0 : 1; // every logged week is at least 1
     var runCurrent = 1;
     for (var i = 1; i < sorted.length; i++) {
       final diff = sorted[i].difference(sorted[i - 1]).inDays;
@@ -147,6 +148,8 @@ final class CalculateStreakUseCase {
         runCurrent = 1;
       }
     }
+    // Ensure current streak never exceeds the recorded longest.
+    if (currentStreak > longest) longest = currentStreak;
 
     return (currentStreak, longest);
   }
